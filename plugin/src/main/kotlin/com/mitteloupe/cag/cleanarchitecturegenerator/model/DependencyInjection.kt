@@ -1,11 +1,17 @@
 package com.mitteloupe.cag.cleanarchitecturegenerator.model
 
-import com.mitteloupe.cag.core.option.DependencyInjection
+import com.mitteloupe.cag.core.option.DependencyInjection as CoreDependencyInjection
 
 enum class DependencyInjection(
-    val coreValue: DependencyInjection
+    val coreValue: CoreDependencyInjection
 ) {
-    Hilt(DependencyInjection.Hilt),
-    Koin(DependencyInjection.Koin),
-    None(DependencyInjection.None)
+    Hilt(CoreDependencyInjection.Hilt),
+    Koin(CoreDependencyInjection.Koin),
+    None(CoreDependencyInjection.None);
+
+    companion object {
+        fun fromString(value: String?): DependencyInjection =
+            entries
+                .find { it.name.equals(value, ignoreCase = true) } ?: Hilt
+    }
 }

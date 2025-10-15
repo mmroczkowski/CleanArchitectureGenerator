@@ -7,12 +7,13 @@ import com.intellij.openapi.components.service
 import com.intellij.openapi.ui.Messages
 import com.mitteloupe.cag.cleanarchitecturegenerator.filesystem.GeneratorProvider
 import com.mitteloupe.cag.cleanarchitecturegenerator.git.GitAddQueueService
+import com.mitteloupe.cag.cleanarchitecturegenerator.settings.AppSettingsService
 import com.mitteloupe.cag.core.AppModuleDirectoryFinder
 import com.mitteloupe.cag.core.GenerationException
 import com.mitteloupe.cag.core.NamespaceResolver
-import com.mitteloupe.cag.core.option.DependencyInjection
 import com.mitteloupe.cag.core.request.GenerateArchitectureRequest
 import java.io.File
+import com.mitteloupe.cag.cleanarchitecturegenerator.model.DependencyInjection as PluginDependencyInjection
 
 class CreateCleanArchitecturePackageAction : AnAction() {
     private val ideBridge = IdeBridge()
@@ -34,6 +35,12 @@ class CreateCleanArchitecturePackageAction : AnAction() {
                 (basePackage ?: defaultBasePackage) + ".architecture"
             val generator = generatorProvider.prepare(project).generate()
             val projectRootDirectory = event.project?.basePath?.let { File(it) } ?: File(".")
+            val defaultDI =
+                PluginDependencyInjection
+                    .fromString(
+                        AppSettingsService.getInstance().defaultDependencyInjection
+                    ).coreValue
+            println("Using default DI from settings: $defaultDI")
             val request =
                 GenerateArchitectureRequest(
                     projectNamespace = basePackage ?: defaultBasePackage,
@@ -41,7 +48,7 @@ class CreateCleanArchitecturePackageAction : AnAction() {
                     appModuleDirectory = dialog.selectedAppModuleDirectory,
                     architecturePackageName = architecturePackageName,
                     enableCompose = dialog.isComposeEnabled(),
-                    dependencyInjection = DependencyInjection.Hilt,
+                    dependencyInjection = defaultDI,
                     enableKtlint = dialog.isKtlintEnabled(),
                     enableDetekt = dialog.isDetektEnabled()
                 )
