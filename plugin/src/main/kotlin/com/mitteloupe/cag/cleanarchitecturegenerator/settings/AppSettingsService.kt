@@ -15,6 +15,7 @@ class AppSettingsService : PersistentStateComponent<AppSettingsService.State> {
     class State {
         var autoAddGeneratedFilesToGit: Boolean = false
         var gitPath: String? = null
+        var defaultDependencyInjection: String = "Hilt"
     }
 
     private var state: State = State()
@@ -22,6 +23,7 @@ class AppSettingsService : PersistentStateComponent<AppSettingsService.State> {
     override fun getState(): State = state
 
     override fun loadState(state: State) {
+        println("Loading AppSettingsService state with default DI: ${state.defaultDependencyInjection}")
         this.state = state
     }
 
@@ -35,6 +37,13 @@ class AppSettingsService : PersistentStateComponent<AppSettingsService.State> {
         get() = state.gitPath
         set(value) {
             state.gitPath = value
+        }
+
+    var defaultDependencyInjection: String
+        get() = state.defaultDependencyInjection
+        set(value) {
+            println("AppSettingsService saving default DI: $value")
+            state.defaultDependencyInjection = value
         }
 
     companion object {

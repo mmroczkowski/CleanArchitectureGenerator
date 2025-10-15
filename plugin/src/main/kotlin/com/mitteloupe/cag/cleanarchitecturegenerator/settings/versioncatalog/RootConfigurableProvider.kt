@@ -5,6 +5,7 @@ import com.intellij.openapi.fileChooser.FileChooserDescriptorFactory
 import com.intellij.openapi.options.BoundSearchableConfigurable
 import com.intellij.openapi.options.Configurable
 import com.intellij.openapi.options.ConfigurableProvider
+import com.intellij.ui.dsl.builder.bindItem
 import com.intellij.ui.dsl.builder.bindSelected
 import com.intellij.ui.dsl.builder.bindText
 import com.intellij.ui.dsl.builder.panel
@@ -16,6 +17,7 @@ import java.io.File
 import javax.swing.JLabel
 import javax.swing.event.DocumentEvent
 import javax.swing.event.DocumentListener
+import com.mitteloupe.cag.cleanarchitecturegenerator.model.DependencyInjection as PluginDependencyInjection
 
 class RootConfigurableProvider : ConfigurableProvider() {
     override fun createConfigurable(): Configurable = RootConfigurable()
@@ -30,9 +32,13 @@ private class RootConfigurable :
         get() = AppSettingsService.getInstance().autoAddGeneratedFilesToGit
     private val serviceGitPath: String?
         get() = AppSettingsService.getInstance().gitPath
+    private val serviceDefaultDependencyInjection: PluginDependencyInjection
+        get() =
+            PluginDependencyInjection.fromString(AppSettingsService.getInstance().defaultDependencyInjection)
 
     private var autoAddToGit: Boolean = serviceAutoAddToGit
     private var gitPath: String = serviceGitPath.orEmpty()
+    private var defaultDependencyInjection: PluginDependencyInjection = serviceDefaultDependencyInjection
 
     override fun createPanel() =
         panel {
@@ -55,6 +61,14 @@ private class RootConfigurable :
                         toolTipText = CleanArchitectureGeneratorBundle.message("settings.auto.add.to.git.tooltip")
                         addChangeListener { updateWarning(gitPath) }
                     }.bindSelected(::autoAddToGit)
+            }
+
+            row(CleanArchitectureGeneratorBundle.message("settings.dependency.injection.label")) {
+                comboBox(PluginDependencyInjection.entries)
+                    .bindItem(
+                        { defaultDependencyInjection },
+                        { value -> value?.let { defaultDependencyInjection = it } }
+                    )
             }
 
             row(CleanArchitectureGeneratorBundle.message("settings.git.path.label")) {
@@ -105,13 +119,20 @@ private class RootConfigurable :
             onApply {
                 AppSettingsService.getInstance().autoAddGeneratedFilesToGit = autoAddToGit
                 AppSettingsService.getInstance().gitPath = gitPath.ifBlank { null }
+                println("Saving default DI setting: ${defaultDependencyInjection.name}")
+                AppSettingsService.getInstance().defaultDependencyInjection = defaultDependencyInjection.name
             }
             onReset {
                 autoAddToGit = serviceAutoAddToGit
                 gitPath = serviceGitPath ?: ""
+                defaultDependencyInjection = serviceDefaultDependencyInjection
+                println("Resetting default DI setting to: ${defaultDependencyInjection.name}")
             }
             onIsModified {
-                autoAddToGit != serviceAutoAddToGit || gitPath != (serviceGitPath ?: "")
+                val serviceDefaultDI = serviceDefaultDependencyInjection
+                autoAddToGit != serviceAutoAddToGit ||
+                    gitPath != (serviceGitPath ?: "") ||
+                    defaultDependencyInjection != serviceDefaultDI
             }
         }
 }

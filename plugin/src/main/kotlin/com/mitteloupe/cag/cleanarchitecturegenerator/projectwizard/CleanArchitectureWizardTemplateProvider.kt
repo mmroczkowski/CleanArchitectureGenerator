@@ -50,7 +50,10 @@ class CleanArchitectureWizardTemplateProvider : WizardTemplateProvider() {
             val dependencyInjectionOption =
                 enumParameter<WizardDependencyInjection> {
                     name = "Dependency Injection"
-                    default = WizardDependencyInjection.Hilt
+                    default =
+                        WizardDependencyInjection.fromString(
+                            AppSettingsService.getInstance().defaultDependencyInjection
+                        )
                     help = "Select the dependency injection library to use in the generated project"
                 }
 
